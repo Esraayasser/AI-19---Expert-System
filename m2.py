@@ -1,3 +1,4 @@
+import math
 class Node:
     id = None  # Unique value for each node.
     up = None  # Represents value of neighbors (up, down, left, right).
@@ -13,39 +14,46 @@ class Node:
     def __init__(self, value):
         self.value = value
 
-goal = Node()
+
+goal = Node('E')
+
+
 def FromulateGrid(s, cost):
     k = 0
     i = 0
     j = 0
-    row = list()
     grid = list()
+    row = list()
     for c in s:
         if c == ',':
             continue
-        elif c == ' ':
-            i += 1
+        if c == ' ':
+            i += 1  # row gdied ya-4paap
             j = 0
+            grid.append(row.copy())
+            row.clear()
         else:
-            n = Node((i,j))
+            n = Node(c)
+            n.id = (i, j)
             n.gOfN = 0
             n.hOfN = 0
+
             if cost:
                 n.edgeCost = cost[k]
             if c == 'E':
                 goal = n
-            grid.append(n)
+            row.append(n)
             k += 1
-        j += 1
-    for n in range(0,i):
+            j += 1
+    for n in range(0, i):
         for m in range(0, j):
-            if n > 0:
+            if n - 1 in range(0, i):
                 grid[n][m].up = grid[n - 1][m].id
-            if n < i - 1:
+            if n + 1 in range(0, i):
                 grid[n][m].down = grid[n + 1][m].id
-            if m > 0:
+            if m - 1 in range(0, j):
                 grid[n][m].left = grid[n][m - 1].id
-            if m < j - 1:
+            if m + 1 in range(0, j):
                 grid[n][m].right = grid[n][m + 1].id
     return grid
 
@@ -65,7 +73,8 @@ class SearchAlgorithms:
          The board is read row wise,
         the nodes are numbered 0-based starting
         the leftmost node'''
-        pass
+        self.grid = FromulateGrid(mazeStr, edgeCost)
+        #pass
 
     def DFS(self):
         # Fill the correct path in self.path
@@ -83,6 +92,44 @@ class SearchAlgorithms:
         return self.path, self.fullPath, self.totalCost
 
     def AStarEuclideanHeuristic(self):
+        # Cost for a step is calculated based on edge cost of node
+        # and use Euclidean Heuristic for evaluating the heuristic value
+        # Fill the correct path in self.path
+        # self.fullPath should contain the order of visited nodes
+        Nodes = set()         # list of unvisited nodes
+        Visited = list()      # list of visited nodes
+        Current = self.grid[0][0]    # current node
+        Nodes.add(Current)      # add the current node to the unvisited nodes list
+        while Nodes:
+            Current = min(Nodes, key=lambda i:i.heuristicFn)
+            if Current == goal:
+                self.totalCost = Current.gOfN
+                while Current.previousNode:
+                    self.path.append(Current)
+                    Current = Current.previousNode
+                self.path.append(Current)
+                return self.path, Visited, self.totalCost
+            Nodes.remove(Current)
+            Visited.append(Current)
+            for Row in self.grid:
+                for n in Row:
+                    if Current.up == n.id:
+                        if n in Visited:
+                            continue
+                        if n in Nodes:
+                            nGOfN = Current.gOfN + Current.edgeCost
+                            if nGOfN < n.gOfN:
+                                n.gOfN = nGOfN
+                                n.previousNode = Current
+                        else:
+                            n.gOfN = Current.gOfN + Current.edgeCost
+                            n.hOfN = math.sqrt(((n.id[0] - goal.id[0])*(n.id[0] - goal.id[0])) +
+                                               ((n.id[1] - goal.id[1])*(n.id[1] - goal.id[1])))
+
+                            n.heuristicFn = n.gOfN + n.gOfN
+                            n.previousNode = Current
+                            Nodes.add(n)
+
         return self.path, self.fullPath, self.totalCost
 
     def AStarManhattanHeuristic(self):
