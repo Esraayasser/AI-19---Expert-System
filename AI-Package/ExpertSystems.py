@@ -164,7 +164,7 @@ def main():
             user_answer = input("Do you wish to check if you have low sugar level, yes or no? ")
             if user_answer == "yes":
                 ls_count = 0
-                print("Do you have any of the following low sugar symptoms, yes or no?")
+                print("Do you have any of the following low sugar symptoms, yes or no? ")
                 for i in engine.low_sugar_symptoms:
                     answer = input(i+": ")
                     if answer == "yes":
@@ -175,7 +175,7 @@ def main():
             user_answer = input("Do you wish to check if you have high sugar level, yes or no? ")
             if user_answer == "yes":
                 hs_count = 0
-                print("Do you have any of the following high sugar symptoms, yes or no?")
+                print("Do you have any of the following high sugar symptoms, yes or no? ")
                 for i in engine.high_sugar_symptoms:
                     answer = input(i+": ")
                     if answer == "yes":
