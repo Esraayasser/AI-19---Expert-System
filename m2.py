@@ -21,14 +21,13 @@ def FromulateGrid(s, cost):
     row = list()
     grid = list()
     for c in s:
-        j += 1
         if c == ',':
             continue
         elif c == ' ':
             i += 1
             j = 0
         else:
-            n = Node(k)
+            n = Node((i,j))
             n.gOfN = 0
             n.hOfN = 0
             if cost:
@@ -37,6 +36,7 @@ def FromulateGrid(s, cost):
                 goal = n
             grid.append(n)
             k += 1
+        j += 1
     for n in range(0,i):
         for m in range(0, j):
             if n > 0:
@@ -83,10 +83,6 @@ class SearchAlgorithms:
         return self.path, self.fullPath, self.totalCost
 
     def AStarEuclideanHeuristic(self):
-        # Cost for a step is calculated based on edge cost of node
-        # and use Euclidean Heuristic for evaluating the heuristic value
-        # Fill the correct path in self.path
-        # self.fullPath should contain the order of visited nodes
         return self.path, self.fullPath, self.totalCost
 
     def AStarManhattanHeuristic(self):
