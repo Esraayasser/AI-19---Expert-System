@@ -1,4 +1,6 @@
 import math
+
+
 class Node:
     id = None  # Unique value for each node.
     up = None  # Represents value of neighbors (up, down, left, right).
@@ -15,50 +17,6 @@ class Node:
         self.value = value
 
 
-goal = Node('E')
-
-
-def FromulateGrid(s, cost):
-    k = 0
-    i = 0
-    j = 0
-    grid = list()
-    row = list()
-    for c in s:
-        if c == ',':
-            continue
-        if c == ' ':
-            i += 1  # row gdied ya-4paap
-            j = 0
-            grid.append(row.copy())
-            row.clear()
-        else:
-            n = Node(c)
-            n.id = (i, j)
-            n.gOfN = 0
-            n.hOfN = 0
-
-            if cost:
-                n.edgeCost = cost[k]
-            if c == 'E':
-                goal = n
-            row.append(n)
-            k += 1
-            j += 1
-    for n in range(0, i):
-        for m in range(0, j):
-            if n - 1 in range(0, i):
-                grid[n][m].up = grid[n - 1][m].id
-            if n + 1 in range(0, i):
-                grid[n][m].down = grid[n + 1][m].id
-            if m - 1 in range(0, j):
-                grid[n][m].left = grid[n][m - 1].id
-            if m + 1 in range(0, j):
-                grid[n][m].right = grid[n][m + 1].id
-    return grid
-
-
-
 class SearchAlgorithms:
     ''' * DON'T change Class, Function or Parameters Names and Order
         * You can add ANY extra functions,
@@ -67,14 +25,57 @@ class SearchAlgorithms:
     path = []  # Represents the correct path from start node to the goal node.
     fullPath = []  # Represents all visited nodes from the start node to the goal node.
     totalCost = -1  # Represents the total cost in case using UCS, AStar (Euclidean or Manhattan)
+    goal = Node('E')
 
     def __init__(self, mazeStr, edgeCost=None):
         ''' mazeStr contains the full board
          The board is read row wise,
         the nodes are numbered 0-based starting
         the leftmost node'''
-        self.grid = FromulateGrid(mazeStr, edgeCost)
+        k = 0
+        self.i = 0
+        self.j = 0
+        self.grid = list()
+        row = list()
+        for c in mazeStr:
+            if c == ',':
+                continue
+            if c == ' ':
+                self.i += 1  # row gdied ya-4paap
+                self.j = 0
+                self.grid.append(row.copy())
+                row.clear()
+            else:
+                n = Node(c)
+                n.id = (self.i, self.j)
+                n.gOfN = 0
+                n.hOfN = 1e9
+                n.heuristicFn = 1e9
+
+                if edgeCost:
+                    n.edgeCost = edgeCost[k]
+                if c == 'E':
+                    n.hOfN = 0
+                    self.goal = n
+                row.append(n)
+                k += 1
+                self.j += 1
+        self.grid.append(row.copy())
+        self.i += 1  # row gdied ya-4paap
+        for n in range(0, self.i):
+            for m in range(0, self.j):
+                if n - 1 in range(0, self.i):
+                    self.grid[n][m].up = self.grid[n - 1][m].id
+                if n + 1 in range(0, self.i):
+                    self.grid[n][m].down = self.grid[n + 1][m].id
+                if m - 1 in range(0, self.j):
+                    self.grid[n][m].left = self.grid[n][m - 1].id
+                if m + 1 in range(0, self.j):
+                    self.grid[n][m].right = self.grid[n][m + 1].id
         #pass
+
+    def get_1D_idx(self, r, c):
+        return r * self.j + c
 
     def DFS(self):
         # Fill the correct path in self.path
@@ -98,23 +99,26 @@ class SearchAlgorithms:
         # self.fullPath should contain the order of visited nodes
         Nodes = set()         # list of unvisited nodes
         Visited = list()      # list of visited nodes
+        self.grid[0][0].heuristicFn = 0
         Current = self.grid[0][0]    # current node
         Nodes.add(Current)      # add the current node to the unvisited nodes list
         while Nodes:
             Current = min(Nodes, key=lambda i:i.heuristicFn)
-            if Current == goal:
+            if Current == self.goal:
                 self.totalCost = Current.gOfN
                 while Current.previousNode:
-                    self.path.append(Current)
+                    self.path.append(self.get_1D_idx(Current.id[0], Current.id[1]))
                     Current = Current.previousNode
-                self.path.append(Current)
-                return self.path, Visited, self.totalCost
+                self.path.append(self.get_1D_idx(Current.id[0], Current.id[1]))
+                for n in Visited:
+                    self.fullPath.append(self.get_1D_idx(n.id[0],n.id[1]))
+                return self.path, self.fullPath, self.totalCost
             Nodes.remove(Current)
             Visited.append(Current)
             for Row in self.grid:
                 for n in Row:
-                    if Current.up == n.id:
-                        if n in Visited:
+                    if Current.up == n.id or Current.down == n.id or Current.left == n.id or Current.right == n.id:
+                        if n in Visited or n.value == '#':
                             continue
                         if n in Nodes:
                             nGOfN = Current.gOfN + Current.edgeCost
@@ -123,9 +127,8 @@ class SearchAlgorithms:
                                 n.previousNode = Current
                         else:
                             n.gOfN = Current.gOfN + Current.edgeCost
-                            n.hOfN = math.sqrt(((n.id[0] - goal.id[0])*(n.id[0] - goal.id[0])) +
-                                               ((n.id[1] - goal.id[1])*(n.id[1] - goal.id[1])))
-
+                            n.hOfN = math.sqrt(((n.id[0] - self.goal.id[0])*(n.id[0] - self.goal.id[0])) +
+                                               ((n.id[1] - self.goal.id[1])*(n.id[1] - self.goal.id[1])))
                             n.heuristicFn = n.gOfN + n.gOfN
                             n.previousNode = Current
                             Nodes.add(n)
