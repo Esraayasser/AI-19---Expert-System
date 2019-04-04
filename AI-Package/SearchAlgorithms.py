@@ -48,7 +48,7 @@ class SearchAlgorithms:
                 row.clear()
             else:
                 node = Node(symbol)
-                node.id = (self.row_count, self.row_count)
+                node.id = (self.row_count, self.column_count)
                 node.gOfN = 0.0
                 node.heuristicFn = 1000.0
 
