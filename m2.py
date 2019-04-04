@@ -48,14 +48,13 @@ class SearchAlgorithms:
             else:
                 n = Node(c)
                 n.id = (self.i, self.j)
-                n.gOfN = 0
-                n.hOfN = 1e9
-                n.heuristicFn = 1e9
+                n.gOfN = 0.0
+                n.heuristicFn = 1000.0
 
                 if edgeCost:
                     n.edgeCost = edgeCost[k]
                 if c == 'E':
-                    n.hOfN = 0
+                    n.hOfN = 0.0
                     self.goal = n
                 row.append(n)
                 k += 1
@@ -97,13 +96,19 @@ class SearchAlgorithms:
         # and use Euclidean Heuristic for evaluating the heuristic value
         # Fill the correct path in self.path
         # self.fullPath should contain the order of visited nodes
-        Nodes = set()         # list of unvisited nodes
+        Nodes = list()         # list of unvisited nodes
         Visited = list()      # list of visited nodes
-        self.grid[0][0].heuristicFn = 0
+        self.grid[0][0].heuristicFn = 0.0
         Current = self.grid[0][0]    # current node
-        Nodes.add(Current)      # add the current node to the unvisited nodes list
+        Nodes.append(Current)      # add the current node to the unvisited nodes list
         while Nodes:
-            Current = min(Nodes, key=lambda i:i.heuristicFn)
+            Current = min(Nodes, key=lambda i:i.hOfN)
+            Nodes.remove(Current)
+            Visited.append(Current)
+            """print("Current::\nid:", '({:d},{:d})'.format(Current.id[0], Current.id[1]))
+            print("hOfN: ", Current.hOfN)
+            print("gOfN: ", '{:f}'.format(Current.gOfN))
+            print("huresticFN: ", '{:f}\n'.format(Current.heuristicFn))"""
             if Current == self.goal:
                 self.totalCost = Current.gOfN
                 while Current.previousNode:
@@ -111,27 +116,36 @@ class SearchAlgorithms:
                     Current = Current.previousNode
                 self.path.append(self.get_1D_idx(Current.id[0], Current.id[1]))
                 for n in Visited:
-                    self.fullPath.append(self.get_1D_idx(n.id[0],n.id[1]))
+                    self.fullPath.append(self.get_1D_idx(n.id[0], n.id[1]))
+                self.path.reverse()
                 return self.path, self.fullPath, self.totalCost
-            Nodes.remove(Current)
-            Visited.append(Current)
             for Row in self.grid:
                 for n in Row:
                     if Current.up == n.id or Current.down == n.id or Current.left == n.id or Current.right == n.id:
                         if n in Visited or n.value == '#':
                             continue
+                        """print("new node::\nid:", '({:d},{:d})'.format(n.id[0], n.id[1]))
+                        print("hOfN: ", n.hOfN)
+                        print("gOfN: ", '{:f}'.format(n.gOfN))
+                        print("huresticFN: ", '{:f}\n'.format(n.heuristicFn))"""
                         if n in Nodes:
-                            nGOfN = Current.gOfN + Current.edgeCost
+                            #print("In Nodes\n")
+                            nGOfN = float(Current.gOfN) + float(Current.edgeCost)
                             if nGOfN < n.gOfN:
                                 n.gOfN = nGOfN
                                 n.previousNode = Current
                         else:
-                            n.gOfN = Current.gOfN + Current.edgeCost
-                            n.hOfN = math.sqrt(((n.id[0] - self.goal.id[0])*(n.id[0] - self.goal.id[0])) +
-                                               ((n.id[1] - self.goal.id[1])*(n.id[1] - self.goal.id[1])))
-                            n.heuristicFn = n.gOfN + n.gOfN
+                            #print("Not in Nodes")
+                            n.gOfN = float(Current.gOfN) + float(Current.edgeCost)
+                            n.hOfN = math.sqrt(float((n.id[0] - self.goal.id[0])*(n.id[0] - self.goal.id[0])) +
+                                               float((n.id[1] - self.goal.id[1])*(n.id[1] - self.goal.id[1])))
+                            n.heuristicFn = n.gOfN + float(n.hOfN)
                             n.previousNode = Current
-                            Nodes.add(n)
+                            """print("edgeCost: ", Current.edgeCost)
+                            print("hOfN: ", n.hOfN)
+                            print("gOfN: ", '{:f}'.format(n.gOfN))
+                            print("huresticFN: ", '{:f}\n'.format(n.heuristicFn))"""
+                            Nodes.append(n)
 
         return self.path, self.fullPath, self.totalCost
 
@@ -176,7 +190,7 @@ def main():
 
             #######################################################################################
 
-    searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
+    #searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
     path, fullPath, TotalCost = searchAlgo.AStarManhattanHeuristic()
     print('**ASTAR with Manhattan Heuristic **\nPath is: ' + str(path) + '\nFull Path is: ' + str(
         fullPath) + '\nTotal Cost: ' + str(TotalCost) + '\n\n')
