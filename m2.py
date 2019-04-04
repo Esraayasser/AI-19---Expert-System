@@ -33,46 +33,51 @@ class SearchAlgorithms:
          The board is read row wise,
         the nodes are numbered 0-based starting
         the leftmost node'''
-        k = 0
-        self.i = 0
-        self.j = 0
+        cost_count = 0
+        self.row_count = 0
+        self.column_count = 0
         self.grid = list()
         row = list()
-        for c in mazeStr:
-            if c == ',':
+        for symbol in mazeStr:
+            if symbol == ',':
                 continue
-            if c == ' ':
-                self.i += 1  # row gdied ya-4paap
-                self.j = 0
+            if symbol == ' ':
+                self.row_count += 1
+                self.column_count = 0
                 self.grid.append(row.copy())
                 row.clear()
             else:
-                n = Node(c)
-                n.id = (self.i, self.j)
-                n.gOfN = 0.0
-                n.heuristicFn = 1000.0
+                node = Node(symbol)
+                node.id = (self.row_count, self.row_count)
+                node.gOfN = 0.0
+                node.heuristicFn = 1000.0
 
                 if edgeCost:
-                    n.edgeCost = edgeCost[k]
-                if c == 'E':
-                    n.hOfN = 0.0
-                    self.goal = n
-                row.append(n)
-                k += 1
-                self.j += 1
+                    node.edgeCost = edgeCost[cost_count]
+                if symbol == 'S':
+                    self.start = node
+                if symbol == 'E':
+                    node.hOfN = 0.0
+                    self.goal = node
+                row.append(node)
+                cost_count += 1
+                self.column_count += 1
         self.grid.append(row.copy())
-        self.i += 1  # row gdied ya-4paap
-        for n in range(0, self.i):
-            for m in range(0, self.j):
-                if n - 1 in range(0, self.i):
+        self.row_count += 1  # for the last row, because there won't be a space
+        for n in range(0, self.row_count):
+            for m in range(0, self.column_count):
+                if n - 1 in range(0, self.row_count):
                     self.grid[n][m].up = self.grid[n - 1][m].id
-                if n + 1 in range(0, self.i):
+                if n + 1 in range(0, self.row_count):
                     self.grid[n][m].down = self.grid[n + 1][m].id
-                if m - 1 in range(0, self.j):
+                if m - 1 in range(0, self.column_count):
                     self.grid[n][m].left = self.grid[n][m - 1].id
-                if m + 1 in range(0, self.j):
+                if m + 1 in range(0, self.column_count):
                     self.grid[n][m].right = self.grid[n][m + 1].id
-        #pass
+
+        '''for ROW in self.grid:
+            for NODE in ROW:
+                print(NODE.value)'''
 
     def get_1D_idx(self, r, c):
         return r * self.j + c
@@ -95,8 +100,8 @@ class SearchAlgorithms:
         self.fullPath.clear()
         self.totalCost = -1
 
-        for i in range(0, self.i):
-            for j in range(0, self.j):
+        for i in range(0, self.row_count):
+            for j in range(0, self.column_count):
                 self.grid[i][j].gOfN = 1e9
 
         pq = PriorityQueue()
