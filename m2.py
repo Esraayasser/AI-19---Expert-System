@@ -1,4 +1,5 @@
 import math
+from queue import *
 
 
 class Node:
@@ -89,13 +90,80 @@ class SearchAlgorithms:
     def UCS(self):
         # Fill the correct path in self.path
         # self.fullPath should contain the order of visited nodes
+        # set all nodes to infinity
+        self.path.clear()
+        self.fullPath.clear()
+        self.totalCost = -1
+
+        for i in range(0, self.i):
+            for j in range(0, self.j):
+                self.grid[i][j].gOfN = 1e9
+
+        pq = PriorityQueue()
+        visited = list()
+        self.grid[0][0].gOfN = 0
+        pq.put((0, self.grid[0][0]))
+        while not pq.empty():
+            tmp = pq.get()
+            # currentCost = tmp[0]
+            currentNode = tmp[1]
+            visited.append(currentNode)
+
+            if currentNode == self.goal:
+                self.totalCost = currentNode.gOfN
+                while currentNode.previousNode:
+                    self.path.append(self.get_1D_idx(currentNode.id[0], currentNode.id[1]))
+                    currentNode = currentNode.previousNode
+                self.path.append(self.get_1D_idx(currentNode.id[0], currentNode.id[1]))
+                for n in visited:
+                    self.fullPath.append(self.get_1D_idx(n.id[0], n.id[1]))
+                self.path.reverse()
+                break
+
+            # The order of expanding node’s children will be (up, down, left, right).
+            if currentNode.up is not None:
+                node = self.grid[currentNode.up[0]][currentNode.up[1]]
+                if node.gOfN > node.edgeCost + currentNode.gOfN:  # old_minimum > new cost
+                    node.gOfN = node.edgeCost + currentNode.gOfN  # update the minimum
+                    node.previousNode = currentNode               # update Parent
+                    pq.put((node.gOfN, node))                     # push the child in the PQ
+                    self.grid[currentNode.up[0]][currentNode.up[1]] = node
+
+            if currentNode.down is not None:
+                node = self.grid[currentNode.down[0]][currentNode.down[1]]
+                if node.gOfN > node.edgeCost + currentNode.gOfN:
+                    node.gOfN = node.edgeCost + currentNode.gOfN
+                    node.previousNode = currentNode
+                    pq.put((node.gOfN, node))
+                    self.grid[currentNode.down[0]][currentNode.down[1]] = node
+
+            if currentNode.left is not None:
+                node = self.grid[currentNode.left[0]][currentNode.left[1]]
+                if node.gOfN > node.edgeCost + currentNode.gOfN:
+                    node.gOfN = node.edgeCost + currentNode.gOfN
+                    node.previousNode = currentNode
+                    pq.put((node.gOfN, node))
+                    self.grid[currentNode.left[0]][currentNode.left[1]] = node
+
+            if currentNode.right is not None:
+                node = self.grid[currentNode.right[0]][currentNode.right[1]]
+                if node.gOfN > node.edgeCost + currentNode.gOfN:
+                    node.gOfN = node.edgeCost + currentNode.gOfN
+                    node.previousNode = currentNode
+                    pq.put((node.gOfN, node))
+                    self.grid[currentNode.right[0]][currentNode.right[1]] = node
         return self.path, self.fullPath, self.totalCost
+
 
     def AStarEuclideanHeuristic(self):
         # Cost for a step is calculated based on edge cost of node
         # and use Euclidean Heuristic for evaluating the heuristic value
         # Fill the correct path in self.path
         # self.fullPath should contain the order of visited nodes
+        self.path.clear()
+        self.fullPath.clear()
+        self.totalCost = -1
+
         Nodes = list()         # list of unvisited nodes
         Visited = list()      # list of visited nodes
         self.grid[0][0].heuristicFn = 0.0
