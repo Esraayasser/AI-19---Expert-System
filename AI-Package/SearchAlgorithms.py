@@ -48,10 +48,9 @@ class SearchAlgorithms:
                 row.clear()
             else:
                 node = Node(symbol)
-                node.id = (self.row_count, self.row_count)
+                node.id = (self.row_count, self.column_count)
                 node.gOfN = 0.0
                 node.heuristicFn = 1000.0
-
                 if edgeCost:
                     node.edgeCost = edgeCost[cost_count]
                 if symbol == 'S':
@@ -80,7 +79,7 @@ class SearchAlgorithms:
                 print(NODE.value)'''
 
     def get_1D_idx(self, r, c):
-        return r * self.j + c
+        return r * self.column_count + c
 
     def DFS(self):
         # Fill the correct path in self.path
@@ -90,6 +89,47 @@ class SearchAlgorithms:
     def BFS(self):
         # Fill the correct path in self.path
         # self.fullPath should contain the order of visited nodes
+        open_q = Queue()
+        open_q.put(self.start)
+        while not open_q.empty():
+            current_node = open_q.get()
+            current_index = self.get_1D_idx(current_node.id[0], current_node.id[1])
+            if current_index in self.fullPath:
+                continue
+            self.fullPath.append(current_index)  # self.fullPath = closed list for BFS
+            if current_node.value == 'E':
+                break
+            if current_node.up is not None:
+                child_node = self.grid[current_node.up[0]][current_node.up[1]]
+                if child_node.value != '#' and child_node.previousNode is None:
+                    child_node.previousNode = current_node
+                    open_q.put(child_node)
+            if current_node.down is not None:
+                child_node = self.grid[current_node.down[0]][current_node.down[1]]
+                if child_node.value != '#' and child_node.previousNode is None:
+                    child_node.previousNode = current_node
+                    open_q.put(child_node)
+            if current_node.left is not None:
+                child_node = self.grid[current_node.left[0]][current_node.left[1]]
+                if child_node.value != '#' and child_node.previousNode is None:
+                    child_node.previousNode = current_node
+                    open_q.put(child_node)
+            if current_node.right is not None:
+                child_node = self.grid[current_node.right[0]][current_node.right[1]]
+                if child_node.value != '#' and child_node.previousNode is None:
+                    child_node.previousNode = current_node
+                    open_q.put(child_node)
+
+        goal_index = self.get_1D_idx(self.goal.id[0], self.goal.id[1])
+        self.path.append(goal_index)
+        current_node = self.goal.previousNode
+        while current_node.value != 'S':
+            current_index = self.get_1D_idx(current_node.id[0], current_node.id[1])
+            self.path.append(current_index)
+            current_node = current_node.previousNode
+        start_index = self.get_1D_idx(self.start.id[0], self.start.id[1])
+        self.path.append(start_index)
+        self.path.reverse()
         return self.path, self.fullPath
 
     def UCS(self):
