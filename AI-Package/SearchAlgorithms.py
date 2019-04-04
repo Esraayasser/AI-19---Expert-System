@@ -80,7 +80,7 @@ class SearchAlgorithms:
                 print(NODE.value)'''
 
     def get_1D_idx(self, r, c):
-        return r * self.j + c
+        return r * self.column_count + c
 
     def DFS(self):
         # Fill the correct path in self.path
