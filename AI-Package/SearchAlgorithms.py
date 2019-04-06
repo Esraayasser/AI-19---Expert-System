@@ -130,7 +130,8 @@ class SearchAlgorithms:
         start_index = self.get_1D_idx(self.start.id[0], self.start.id[1])
         self.path.append(start_index)
         self.path.reverse()
-        return self.path, self.fullPath
+        dummy_path = list()
+        return dummy_path, self.fullPath
 
     def UCS(self):
         # Fill the correct path in self.path
