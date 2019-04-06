@@ -23,10 +23,11 @@ class SearchAlgorithms:
         * You can add ANY extra functions,
           classes you need as long as the main
           structure is left as is '''
-    path = []  # Represents the correct path from start node to the goal node.
-    fullPath = []  # Represents all visited nodes from the start node to the goal node.
-    totalCost = -1  # Represents the total cost in case using UCS, AStar (Euclidean or Manhattan)
-    goal = Node('E')
+    path = []           # Represents the correct path from start node to the goal node.
+    fullPath = []       # Represents all visited nodes from the start node to the goal node.
+    totalCost = -1      # Represents the total cost in case using UCS, AStar (Euclidean or Manhattan)
+    goal = Node('E')    # Represents the goal node for the algorithms.
+    start = Node('S')   # Represents the start node of the algorithms.
 
     def __init__(self, mazeStr, edgeCost=None):
         ''' mazeStr contains the full board
@@ -51,6 +52,7 @@ class SearchAlgorithms:
                 node.id = (self.row_count, self.column_count)
                 node.gOfN = 0.0
                 node.heuristicFn = 1000.0
+                node.edgeCost = 1
                 if edgeCost:
                     node.edgeCost = edgeCost[cost_count]
                 if symbol == 'S':
@@ -78,6 +80,22 @@ class SearchAlgorithms:
             for NODE in ROW:
                 print(NODE.value)'''
 
+    # A function to get the children of a certain parent node
+    # Takes the parent node and a list of lowercase words of the wanted expansion order
+    def get_children(self, parent, order):
+        children = list()
+        for o in order:
+            if o == "up" and parent.up != None:
+                children.append(self.grid[parent.up[0]][parent.up[1]])
+            if o == "down" and parent.down != None:
+                children.append(self.grid[parent.down[0]][parent.down[1]])
+            if o == "left" and parent.left != None:
+                children.append(self.grid[parent.left[0]][parent.left[1]])
+            if o == "right" and parent.right != None:
+                children.append(self.grid[parent.right[0]][parent.right[1]])
+        return children
+
+    # A function to get the 1D id from the 2D id.
     def get_1D_idx(self, r, c):
         return r * self.column_count + c
 
@@ -206,60 +224,58 @@ class SearchAlgorithms:
         # and use Euclidean Heuristic for evaluating the heuristic value
         # Fill the correct path in self.path
         # self.fullPath should contain the order of visited nodes
+
         self.path.clear()
         self.fullPath.clear()
         self.totalCost = -1
 
-        Nodes = list()         # list of unvisited nodes
-        Visited = list()      # list of visited nodes
-        self.grid[0][0].heuristicFn = 0.0
-        Current = self.grid[0][0]    # current node
-        Nodes.append(Current)      # add the current node to the unvisited nodes list
-        while Nodes:
-            Current = min(Nodes, key=lambda i:i.hOfN)
-            Nodes.remove(Current)
-            Visited.append(Current)
-            """print("Current::\nid:", '({:d},{:d})'.format(Current.id[0], Current.id[1]))
-            print("hOfN: ", Current.hOfN)
-            print("gOfN: ", '{:f}'.format(Current.gOfN))
-            print("huresticFN: ", '{:f}\n'.format(Current.heuristicFn))"""
-            if Current == self.goal:
-                self.totalCost = Current.gOfN
+        nodes = list()  # list of unvisited nodes
+        visited = list()  # list of visited nodes
+        current = self.start  # current node
+
+        nodes.append(current)  # add the current node to the unvisited nodes list
+        while nodes:    # while there's still nodes in the Nodes list explore them.
+            # get the node with the minimum heuristicFn value in the nodes list.
+            current = min(nodes, key=lambda i: i.heuristicFn)
+            nodes.remove(current)
+            visited.append(current)
+            if current == self.goal:
+                self.totalCost = current.gOfN
+                """
                 while Current.previousNode:
                     self.path.append(self.get_1D_idx(Current.id[0], Current.id[1]))
                     Current = Current.previousNode
                 self.path.append(self.get_1D_idx(Current.id[0], Current.id[1]))
-                for n in Visited:
-                    self.fullPath.append(self.get_1D_idx(n.id[0], n.id[1]))
                 self.path.reverse()
+                """
+                for n in visited:
+                    self.fullPath.append(self.get_1D_idx(n.id[0], n.id[1]))
+
                 return self.path, self.fullPath, self.totalCost
-            for Row in self.grid:
-                for n in Row:
-                    if Current.up == n.id or Current.down == n.id or Current.left == n.id or Current.right == n.id:
-                        if n in Visited or n.value == '#':
-                            continue
-                        """print("new node::\nid:", '({:d},{:d})'.format(n.id[0], n.id[1]))
-                        print("hOfN: ", n.hOfN)
-                        print("gOfN: ", '{:f}'.format(n.gOfN))
-                        print("huresticFN: ", '{:f}\n'.format(n.heuristicFn))"""
-                        if n in Nodes:
-                            #print("In Nodes\n")
-                            nGOfN = float(Current.gOfN) + float(Current.edgeCost)
-                            if nGOfN < n.gOfN:
-                                n.gOfN = nGOfN
-                                n.previousNode = Current
-                        else:
-                            #print("Not in Nodes")
-                            n.gOfN = float(Current.gOfN) + float(Current.edgeCost)
-                            n.hOfN = math.sqrt(float((n.id[0] - self.goal.id[0])*(n.id[0] - self.goal.id[0])) +
-                                               float((n.id[1] - self.goal.id[1])*(n.id[1] - self.goal.id[1])))
-                            n.heuristicFn = n.gOfN + float(n.hOfN)
-                            n.previousNode = Current
-                            """print("edgeCost: ", Current.edgeCost)
-                            print("hOfN: ", n.hOfN)
-                            print("gOfN: ", '{:f}'.format(n.gOfN))
-                            print("huresticFN: ", '{:f}\n'.format(n.heuristicFn))"""
-                            Nodes.append(n)
+            # get the children of the Current node in t he wanted order
+            children = self.get_children(current, ["up", "down", "left", "right"])
+            for child in children:
+                if child in visited or child.value == '#':
+                    continue
+                if child in nodes:
+                    #   if the child node already exists in the nodes list then
+                    #   we need to calculate only the new value of g(n) and update it in the list.
+                    # the new value of g(n) comes from the old value +  the penalty of accessing this node.
+                    newGOfN = float(current.gOfN) + float(child.edgeCost)
+                    if newGOfN < child.gOfN:
+                        child.gOfN = newGOfN
+                        child.previousNode = current
+                else:
+                    #   if the child node does not exist in the nodes list then we calculate g(n),
+                    #   h(n) by using the Euclidean method h(n) = sqrt((a - c)^2 + (b - d)^2)
+                    #   having child.id = (a, b) and goal.id = (c, d).
+                    #   and f(n) then add it to the list
+                    child.gOfN = current.gOfN + child.edgeCost
+                    child.hOfN = math.sqrt(float((child.id[0] - self.goal.id[0]) * (child.id[0] - self.goal.id[0])) +
+                                           float((child.id[1] - self.goal.id[1]) * (child.id[1] - self.goal.id[1])))
+                    child.heuristicFn = child.gOfN + float(child.hOfN)
+                    child.previousNode = current
+                    nodes.append(child)
 
         return self.path, self.fullPath, self.totalCost
 
@@ -268,6 +284,59 @@ class SearchAlgorithms:
         # and use ManhattanHeuristic for evaluating the heuristic value
         # Fill the correct path in self.path
         # self.fullPath should contain the order of visited nodes
+
+        self.path.clear()
+        self.fullPath.clear()
+        self.totalCost = -1
+
+        nodes = list()  # list of unvisited nodes
+        visited = list()  # list of visited nodes
+        current = self.start  # current node
+
+        nodes.append(current)  # add the current node to the unvisited nodes list
+        while nodes:
+            # get the node with the minimum heuristicFn value in the nodes list.
+            current = min(nodes, key=lambda i: i.heuristicFn)
+            nodes.remove(current)
+            visited.append(current)
+            if current == self.goal:
+                self.totalCost = current.gOfN
+                """
+                while Current.previousNode:
+                    self.path.append(self.get_1D_idx(Current.id[0], Current.id[1]))
+                    Current = Current.previousNode
+                self.path.append(self.get_1D_idx(Current.id[0], Current.id[1]))
+                self.path.reverse()
+                """
+                for n in visited:
+                    self.fullPath.append(self.get_1D_idx(n.id[0], n.id[1]))
+
+                return self.path, self.fullPath, self.totalCost
+
+            # get the children of the Current node in t he wanted order
+            children = self.get_children(current, ["up", "down", "left", "right"])
+            for child in children:
+                if child in visited or child.value == '#':
+                    continue
+                if child in nodes:
+                    #   if the child node already exists in the nodes list then
+                    #   we need to calculate only the new value of g(n) and update it in the list.
+                    #   the new value of g(n) comes from the old value +  the penalty of accessing this node.
+                    newGOfN = float(current.gOfN) + float(child.edgeCost)
+                    if newGOfN < child.gOfN:
+                        child.gOfN = newGOfN
+                        child.previousNode = current
+                else:
+                    #   if the child node does not exist in the nodes list then we calculate g(n),
+                    #   h(n) by using the Manhattan method h(n) = abs(a - c) + abs(b - d),
+                    #   having child.id = (a, b) and goal.id = (c, d).
+                    #   and f(n) then add it to the list
+                    child.gOfN = current.gOfN + child.edgeCost
+                    child.hOfN = abs(child.id[0] - self.goal.id[0]) + abs(child.id[1] - self.goal.id[1])
+                    child.heuristicFn = child.gOfN + float(child.hOfN)
+                    child.previousNode = current
+                    nodes.append(child)
+
         return self.path, self.fullPath, self.totalCost
 
 
@@ -304,7 +373,7 @@ def main():
 
             #######################################################################################
 
-    #searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
+    searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
     path, fullPath, TotalCost = searchAlgo.AStarManhattanHeuristic()
     print('**ASTAR with Manhattan Heuristic **\nPath is: ' + str(path) + '\nFull Path is: ' + str(
         fullPath) + '\nTotal Cost: ' + str(TotalCost) + '\n\n')
