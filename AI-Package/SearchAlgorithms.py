@@ -76,22 +76,18 @@ class SearchAlgorithms:
                 if m + 1 in range(0, self.column_count):
                     self.grid[n][m].right = self.grid[n][m + 1].id
 
-        '''for ROW in self.grid:
-            for NODE in ROW:
-                print(NODE.value)'''
-
     # A function to get the children of a certain parent node
     # Takes the parent node and a list of lowercase words of the wanted expansion order
     def get_children(self, parent, order):
         children = list()
         for o in order:
-            if o == "up" and parent.up != None:
+            if o == "up" and parent.up is not None:
                 children.append(self.grid[parent.up[0]][parent.up[1]])
-            if o == "down" and parent.down != None:
+            if o == "down" and parent.down is not None:
                 children.append(self.grid[parent.down[0]][parent.down[1]])
-            if o == "left" and parent.left != None:
+            if o == "left" and parent.left is not None:
                 children.append(self.grid[parent.left[0]][parent.left[1]])
-            if o == "right" and parent.right != None:
+            if o == "right" and parent.right is not None:
                 children.append(self.grid[parent.right[0]][parent.right[1]])
         return children
 
@@ -159,6 +155,7 @@ class SearchAlgorithms:
         self.fullPath.clear()
         self.totalCost = -1
 
+        # set the minimum edge costs to infinity
         for i in range(0, self.row_count):
             for j in range(0, self.column_count):
                 self.grid[i][j].gOfN = 1e9
@@ -169,53 +166,32 @@ class SearchAlgorithms:
         pq.put((0, self.grid[0][0]))
         while not pq.empty():
             tmp = pq.get()
-            # currentCost = tmp[0]
-            currentNode = tmp[1]
-            visited.append(currentNode)
+            # current_cost = tmp[0]
+            current_node = tmp[1]
+            visited.append(current_node)
 
-            if currentNode == self.goal:
-                self.totalCost = currentNode.gOfN
-                while currentNode.previousNode:
-                    self.path.append(self.get_1D_idx(currentNode.id[0], currentNode.id[1]))
-                    currentNode = currentNode.previousNode
-                self.path.append(self.get_1D_idx(currentNode.id[0], currentNode.id[1]))
+            if current_node.value == self.goal.value:
+                self.totalCost = current_node.gOfN
+                '''
+                while current_node.previousNode:
+                    self.path.append(self.get_1D_idx(current_node.id[0], current_node.id[1]))
+                    current_node = current_node.previousNode
+                self.path.append(self.get_1D_idx(current_node.id[0], current_node.id[1]))
+                self.path.reverse()
+                '''
                 for n in visited:
                     self.fullPath.append(self.get_1D_idx(n.id[0], n.id[1]))
-                self.path.reverse()
                 break
 
             # The order of expanding node’s children will be (up, down, left, right).
-            if currentNode.up is not None:
-                node = self.grid[currentNode.up[0]][currentNode.up[1]]
-                if node.gOfN > node.edgeCost + currentNode.gOfN:  # old_minimum > new cost
-                    node.gOfN = node.edgeCost + currentNode.gOfN  # update the minimum
-                    node.previousNode = currentNode               # update Parent
-                    pq.put((node.gOfN, node))                     # push the child in the PQ
-                    self.grid[currentNode.up[0]][currentNode.up[1]] = node
+            children = self.get_children(current_node, ["up", "down", "left", "right"])
+            for node in children:
+                if node is not None and node.gOfN > node.edgeCost + current_node.gOfN:  # old_minimum > new cost
+                        node.gOfN = node.edgeCost + current_node.gOfN  # update the minimum
+                        node.previousNode = current_node               # update Parent
+                        pq.put((node.gOfN, node))                      # push the child in the PQ
+                        self.grid[node.id[0]][node.id[1]] = node
 
-            if currentNode.down is not None:
-                node = self.grid[currentNode.down[0]][currentNode.down[1]]
-                if node.gOfN > node.edgeCost + currentNode.gOfN:
-                    node.gOfN = node.edgeCost + currentNode.gOfN
-                    node.previousNode = currentNode
-                    pq.put((node.gOfN, node))
-                    self.grid[currentNode.down[0]][currentNode.down[1]] = node
-
-            if currentNode.left is not None:
-                node = self.grid[currentNode.left[0]][currentNode.left[1]]
-                if node.gOfN > node.edgeCost + currentNode.gOfN:
-                    node.gOfN = node.edgeCost + currentNode.gOfN
-                    node.previousNode = currentNode
-                    pq.put((node.gOfN, node))
-                    self.grid[currentNode.left[0]][currentNode.left[1]] = node
-
-            if currentNode.right is not None:
-                node = self.grid[currentNode.right[0]][currentNode.right[1]]
-                if node.gOfN > node.edgeCost + currentNode.gOfN:
-                    node.gOfN = node.edgeCost + currentNode.gOfN
-                    node.previousNode = currentNode
-                    pq.put((node.gOfN, node))
-                    self.grid[currentNode.right[0]][currentNode.right[1]] = node
         return self.path, self.fullPath, self.totalCost
 
 
@@ -260,7 +236,7 @@ class SearchAlgorithms:
                 if child in nodes:
                     #   if the child node already exists in the nodes list then
                     #   we need to calculate only the new value of g(n) and update it in the list.
-                    # the new value of g(n) comes from the old value +  the penalty of accessing this node.
+                    #   the new value of g(n) comes from the old value +  the penalty of accessing this node.
                     newGOfN = float(current.gOfN) + float(child.edgeCost)
                     if newGOfN < child.gOfN:
                         child.gOfN = newGOfN
