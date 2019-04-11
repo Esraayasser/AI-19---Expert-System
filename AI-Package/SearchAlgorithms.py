@@ -28,6 +28,7 @@ class SearchAlgorithms:
     totalCost = -1      # Represents the total cost in case using UCS, AStar (Euclidean or Manhattan)
     goal = Node('E')    # Represents the goal node for the algorithms.
     start = Node('S')   # Represents the start node of the algorithms.
+    visitedlist = []  # for actual_DFS
 
     def __init__(self, mazeStr, edgeCost=None):
         ''' mazeStr contains the full board
@@ -94,10 +95,33 @@ class SearchAlgorithms:
     # A function to get the 1D id from the 2D id.
     def get_1D_idx(self, r, c):
         return r * self.column_count + c
+    foundPath = 0
+    def actual_dfs(self, current):
+
+        if self.foundPath:
+            return self.path, self.fullPath
+        currentindex = self.get_1D_idx(current.id[0], current.id[1])
+        self.fullPath.append(currentindex)
+        if current.value == self.goal.value:
+            self.foundPath = 1
+            return self.path, self.fullPath
+
+        children = self.get_children(current, ["up", "down", "left", "right"])
+        togo = []
+        for x in children:
+            childindex = self.get_1D_idx(x.id[0], x.id[1])
+            if x.value != "#" and childindex not in self.visitedlist:
+                self.visitedlist.append(childindex)
+                togo.append(x)
+
+        for x in togo:
+            self.actual_dfs(x)
 
     def DFS(self):
-        # Fill the correct path in self.path
-        # self.fullPath should contain the order of visited nodes
+        self.fullPath.clear()
+        self.visitedlist.append(self.get_1D_idx(self.start.id[0], self.start.id[1]))
+        self.actual_dfs(self.start)
+
         return self.path, self.fullPath
 
     def BFS(self):
@@ -323,9 +347,9 @@ def main():
 
                 #######################################################################################
 
-    searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
-    path, fullPath = searchAlgo.BFS()
-    print('**BFS**\nPath is: ' + str(path) + '\nFull Path is: ' + str(fullPath) + '\n\n')
+    #searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
+    #path, fullPath = searchAlgo.BFS()
+    #print('**BFS**\nPath is: ' + str(path) + '\nFull Path is: ' + str(fullPath) + '\n\n')
                 #######################################################################################
 
     searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.', [0, 15, 2, 100, 60, 35, 30, 3
