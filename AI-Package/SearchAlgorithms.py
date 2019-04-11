@@ -127,6 +127,8 @@ class SearchAlgorithms:
     def BFS(self):
         # Fill the correct path in self.path
         # self.fullPath should contain the order of visited nodes
+        self.path.clear()
+        self.fullPath.clear()
         open_q = Queue()
         open_q.put(self.start)
         while not open_q.empty():
@@ -137,7 +139,13 @@ class SearchAlgorithms:
             self.fullPath.append(current_index)  # self.fullPath = closed list for BFS
             if current_node.value == 'E':
                 break
-            if current_node.up is not None:
+            children = self.get_children(current_node, ["up", "down", "left", "right"])
+            for child_node in children:
+                if child_node.value != '#' and child_node.previousNode is None:
+                    child_node.previousNode = current_node
+                    open_q.put(child_node)
+
+            '''if current_node.up is not None:
                 child_node = self.grid[current_node.up[0]][current_node.up[1]]
                 if child_node.value != '#' and child_node.previousNode is None:
                     child_node.previousNode = current_node
@@ -156,7 +164,7 @@ class SearchAlgorithms:
                 child_node = self.grid[current_node.right[0]][current_node.right[1]]
                 if child_node.value != '#' and child_node.previousNode is None:
                     child_node.previousNode = current_node
-                    open_q.put(child_node)
+                    open_q.put(child_node)'''
 
         goal_index = self.get_1D_idx(self.goal.id[0], self.goal.id[1])
         self.path.append(goal_index)
@@ -347,9 +355,9 @@ def main():
 
                 #######################################################################################
 
-    #searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
-    #path, fullPath = searchAlgo.BFS()
-    #print('**BFS**\nPath is: ' + str(path) + '\nFull Path is: ' + str(fullPath) + '\n\n')
+    searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
+    path, fullPath = searchAlgo.BFS()
+    print('**BFS**\nPath is: ' + str(path) + '\nFull Path is: ' + str(fullPath) + '\n\n')
                 #######################################################################################
 
     searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.', [0, 15, 2, 100, 60, 35, 30, 3
