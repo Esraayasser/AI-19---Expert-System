@@ -42,7 +42,7 @@ class Feature:
         self.visited = -1
         self.infoGain = -1
 
-# incomplete
+
 class Node:
     def __init__(self, name='', column_index=-1, pure=0, decision=-1):
         self.name = name
@@ -51,6 +51,7 @@ class Node:
         self.decision = decision
         self.right = []
         self.left = []
+
 
 class ID3:
     def __init__(self, features):
