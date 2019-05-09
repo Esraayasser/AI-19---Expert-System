@@ -1,5 +1,4 @@
 import math
-import numpy
 
 
 class item:
@@ -9,7 +8,6 @@ class item:
         self.astigmatic = astigmatic
         self.tearRate = tearRate
         self.needLense = needLense
-
 
 def getDataset():
     data = []
@@ -38,85 +36,210 @@ def getDataset():
     return data
 
 
-Total = 21
-def Intropy(columnName):
-    if columnName == "needLense":
-        need = 0
-        noNeed = 0
-        for item in dataset:
-            if item.needLense == 0:
-                noNeed += 1
-            elif item.needLense == 1:
-                need += 1
-        intropy = ((-need / Total) * math.log((need / Total), 2)) + ((-noNeed / Total) * math.log((noNeed / Total), 2))
-
-    elif columnName == "age":
-        young = 0
-        adult = 0
-        for item in dataset:
-            if item.age == 0:
-                young += 1
-            elif item.needLense == 1:
-                adult += 1
-        intropy = ((-adult / Total) * math.log((adult / Total), 2)) + ((-young / Total) * math.log((young / Total), 2))
-
-    elif columnName == "prescription":
-        myope = 0
-        hypermetrope = 0
-        for item in dataset:
-            if item.prescription == 0:
-                hypermetrope += 1
-            elif item.prescription == 1:
-                myope += 1
-        intropy = ((-myope / Total) * math.log((myope / Total), 2)) + ((-hypermetrope / Total) * math.log((hypermetrope / Total), 2))
-
-    elif columnName == "astigmatic":
-        no = 0
-        yes = 0
-        for item in dataset:
-            if item.astigmatic == 0:
-                yes += 1
-            elif item.astigmatic == 1:
-                no += 1
-        intropy = ((-no / Total) * math.log((no / Total), 2)) + ((-yes / Total) * math.log((yes / Total), 2))
-
-    elif columnName == "tearRate":
-        normal = 0
-        reduced = 0
-        for item in dataset:
-            if item.tearRate == 0:
-                reduced += 1
-            elif item.tearRate == 1:
-                normal += 1
-        intropy = ((-normal / Total) * math.log((normal / Total), 2)) + ((-reduced / Total) * math.log((reduced / Total), 2))
-
-    return intropy
-
 class Feature:
     def __init__(self, name):
         self.name = name
         self.visited = -1
         self.infoGain = -1
 
-
-
+# incomplete
+class Node:
+    def __init__(self, name, value):
+        self.name = name
+        self.right = None
+        self.left = None
 
 class ID3:
     def __init__(self, features):
         self.features = features
+        self.data0 = dataset
+        self.data1 = []
+        self.tree_root = None
 
+    def info_gain(self, column_name, current_items):
+        #  total entropy
+        total = len(current_items)
+        need = 0
+        noNeed = 0
+        for item in current_items:
+            if item.needLense == 0:
+                noNeed += 1
+            elif item.needLense == 1:
+                need += 1
+        total_entropy = ((-need / total) * math.log((need / total), 2)) + (
+                (-noNeed / total) * math.log((noNeed / total), 2))
+
+        if column_name == "age":
+            lense_young = 0
+            lense_old = 0
+            no_lense_young = 0
+            no_lense_old = 0
+            for item in current_items:
+                if item.needLense:
+                    if item.age == 0:
+                        lense_young += 1
+                    else:
+                        lense_old += 1
+                else:
+                    if item.age == 0:
+                        no_lense_young += 1
+                    else:
+                        no_lense_old += 1
+
+            total_young = lense_young + no_lense_young
+            p_young_lense = lense_young / total_young
+            p_young_no_lense = no_lense_young / total_young
+            young_entropy = -p_young_lense * math.log(p_young_lense, 2) - p_young_no_lense * math.log(p_young_no_lense, 2)
+
+            total_old = lense_old + no_lense_old
+            p_old_lense = lense_old / total_old
+            p_old_no_lense = no_lense_old / total_old
+            old_entropy = -p_old_lense * math.log(p_old_lense, 2) - p_old_no_lense * math.log(p_old_no_lense, 2)
+
+            return total_entropy - (total_young/total * young_entropy + total_old/total * old_entropy)
+
+        if column_name == "prescription":
+            lense_myope = 0
+            lense_hyper = 0
+            no_lense_myope = 0
+            no_lense_hyper = 0
+            for item in current_items:
+                if item.needLense:
+                    if item.prescription == 0:
+                        lense_myope += 1
+                    else:
+                        lense_hyper += 1
+                else:
+                    if item.prescription == 0:
+                        no_lense_myope += 1
+                    else:
+                        no_lense_hyper += 1
+
+            total_myope = lense_myope + no_lense_myope
+            p_myope_lense = lense_myope / total_myope
+            p_myope_no_lense = no_lense_myope / total_myope
+            myope_entropy = -p_myope_lense * math.log(p_myope_lense, 2) - p_myope_no_lense * math.log(p_myope_no_lense, 2)
+
+            total_hyper = lense_hyper + no_lense_hyper
+            p_hyper_lense = lense_hyper / total_hyper
+            p_hyper_no_lense = no_lense_hyper / total_hyper
+            hyper_entropy = -p_hyper_lense * math.log(p_hyper_lense, 2) - p_hyper_no_lense * math.log(p_myope_no_lense, 2)
+
+            return total_entropy - (total_myope / total * myope_entropy + total_hyper / total * hyper_entropy)
+
+        if column_name == "astigmatic":
+            lense_not_ast = 0
+            lense_ast = 0
+            no_lense_not_ast = 0
+            no_lense_ast = 0
+            for item in current_items:
+                if item.needLense:
+                    if item.astigmatic == 0:
+                        lense_not_ast += 1
+                    else:
+                        lense_ast += 1
+                else:
+                    if item.astigmatic == 0:
+                        no_lense_not_ast += 1
+                    else:
+                        no_lense_ast += 1
+
+            total_not_ast = lense_not_ast + no_lense_not_ast
+            p_not_ast_lense = lense_not_ast / total_not_ast
+            p_not_ast_no_lense = no_lense_not_ast / total_not_ast
+            not_ast_entropy = -p_not_ast_lense * math.log(p_not_ast_lense, 2) - p_not_ast_no_lense * math.log(p_not_ast_no_lense, 2)
+
+            total_ast = lense_ast + no_lense_ast
+            p_ast_lense = lense_ast / total_ast
+            p_ast_no_lense = no_lense_ast / total_ast
+            ast_entropy = -p_ast_lense * math.log(p_ast_lense, 2) - p_ast_no_lense * math.log(p_ast_no_lense, 2)
+
+            return total_entropy - (total_not_ast / total * not_ast_entropy + total_ast / total * ast_entropy)
+
+        if column_name == "tearRate":
+            lense_normal = 0
+            lense_reduced = 0
+            no_lense_normal = 0
+            no_lense_reduced = 0
+            for item in current_items:
+                if item.needLense:
+                    if item.tearRate == 0:
+                        lense_normal += 1
+                    else:
+                        lense_reduced += 1
+                else:
+                    if item.prescription == 0:
+                        no_lense_normal += 1
+                    else:
+                        no_lense_reduced += 1
+
+            total_normal = lense_normal + no_lense_normal
+            p_normal_lense = lense_normal / total_normal
+            p_normal_no_lense = no_lense_normal / total_normal
+            normal_entropy = -p_normal_lense * math.log(p_normal_lense, 2) - p_normal_no_lense * math.log(p_normal_no_lense, 2)
+
+            total_reduced = lense_reduced + no_lense_reduced
+            p_reduced_lense = lense_reduced / total_reduced
+            p_reduced_no_lense = no_lense_reduced / total_reduced
+            reduced_entropy = -p_reduced_lense * math.log(p_reduced_lense, 2) - p_reduced_no_lense * math.log(p_reduced_no_lense, 2)
+
+            return total_entropy - (total_normal / total * normal_entropy + total_reduced / total * reduced_entropy)
+
+    def split(self, column_name):
+        if column_name == 'age':
+            for item in self.data0:
+                if item.age:
+                    self.data0.remove(item)
+                    self.data1.append(item)
+            return
+
+        if column_name == 'prescription':
+            for item in self.data0:
+                if item.prescription:
+                    self.data0.remove(item)
+                    self.data1.append(item)
+            return
+
+        if column_name == 'astigmatic':
+            for item in self.data0:
+                if item.astigmatic:
+                    self.data0.remove(item)
+                    self.data1.append(item)
+            return
+
+        if column_name == 'tearRate':
+            for item in self.data0:
+                if item.tearRate:
+                    self.data0.remove(item)
+                    self.data1.append(item)
+            return
+
+    # incomplete
+    def build_decision_tree(self):
+        max_gain = 0
+        max_feature = Feature
+        for feature in self.features:
+            if feature.visited:
+                continue
+            if self.data0 is None:
+                feature.infoGain = self.info_gain(feature.name, dataset)
+            else:
+                feature.infoGain = self.info_gain(feature.name, self.data0)
+            if feature.infoGain > max_gain:
+                max_gain = feature.infoGain
+                max_feature = feature
+
+        self.split(max_feature.name)
+        max_feature.visited = 1;
 
     def classify(self, input):
-        totalIntropy = Intropy("")
-
-
-        #takes an array for the features ex. [0, 0, 1, 1]
-		#should return 0 or 1 based on the classification
-		#pass
+        # takes an array for the features ex. [0, 0, 1, 1]
+        # should return 0 or 1 based on the classification
+        pass
 
 
 dataset = getDataset()
-features = [Feature('age'),Feature('prescription'),Feature('astigmatic'),Feature('tearRate')]
+features = [Feature('age'), Feature('prescription'), Feature('astigmatic'), Feature('tearRate')]
 id3 = ID3(features)
 cls = id3.classify([0, 0, 1, 1]) # should print 1
 print('testcase 1: ', cls)
@@ -126,8 +249,3 @@ cls = id3.classify([1, 1, 1, 0]) # should print 0
 print('testcase 3: ', cls)
 cls = id3.classify([1, 1, 0, 1]) # should print 1
 print('testcase 4: ', cls)
-
-
-
-
-
