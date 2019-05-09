@@ -49,14 +49,13 @@ class Node:
         self.column_index = column_index
         self.pure = pure
         self.decision = decision
-        self.right = None
-        self.left = None
+        self.right = []
+        self.left = []
 
 class ID3:
-    tree_root = Node()
-
     def __init__(self, features):
         self.features = features
+        self.tree_root = []
         self.build_decision_tree(self.construct_2D_array(dataset), self.tree_root)
 
     def construct_2D_array(self, dataset):
@@ -68,8 +67,6 @@ class ID3:
 
     def entropy(self, column_index, current_items):
         #  total entropy
-        print(current_items)
-        print(len(current_items))
         total = len(current_items)
         need = 0
         no_need = 0
@@ -117,7 +114,6 @@ class ID3:
             if p_one_no_need != 1 and p_one_no_need != 0:
                 one_entropy += -p_one_no_need * math.log(p_one_no_need, 2)
 
-        print(need, no_need)
         return total_entropy, total_zero, zero_entropy, total_one, one_entropy
 
     def info_gain(self, column_index, current_items):
@@ -146,10 +142,10 @@ class ID3:
                 zeroes += 1
 
         if zeroes == 0:
-            current_node = Node('', -1, 1, 1)
+            current_node.append(Node('', -1, 1, 1))
             return
         if zeroes == len(data):
-            current_node = Node('', -1, 1, 0)
+            current_node.append(Node('', -1, 1, 0))
             return
 
         max_gain = -1
@@ -158,30 +154,26 @@ class ID3:
             if self.features[feature_index].visited == 1:
                 continue
             gain = self.info_gain(feature_index, data)
-            print(self.features[feature_index].name, gain)
             self.features[feature_index].info_gain = gain
             if gain > max_gain:
                 max_gain = gain
                 max_feature = feature_index
-        print('tree: ', self.features[max_feature].name, max_feature)
-        current_node = Node(self.features[max_feature].name, max_feature, 0, -1)
+        current_node.append(Node(self.features[max_feature].name, max_feature, 0, -1))
         features[max_feature].visited = 1
         data0, data1 = self.split(data, max_feature)
-        self.build_decision_tree(data0, current_node.left)
-        self.build_decision_tree(data1, current_node.right)
+        self.build_decision_tree(data0, current_node[0].left)
+        self.build_decision_tree(data1, current_node[0].right)
 
     def classify(self, input):
         # takes an array for the features ex. [0, 0, 1, 1]
         # should return 0 or 1 based on the classification
         current_node = self.tree_root
-        parent_node = current_node
-        while current_node is not None:
-            parent_node = current_node
-            if input[current_node.column_index]:
-                current_node = current_node.right
+        while not current_node[0].pure:
+            if input[current_node[0].column_index]:
+                current_node = current_node[0].right
             else:
-                current_node = current_node.left
-        return parent_node.decision
+                current_node = current_node[0].left
+        return current_node[0].decision
 
 
 dataset = getDataset()
