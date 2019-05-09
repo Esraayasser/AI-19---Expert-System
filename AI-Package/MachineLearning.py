@@ -1,5 +1,4 @@
 import math
-import array
 
 
 class item:
@@ -54,11 +53,11 @@ class Node:
         self.left = None
 
 class ID3:
+    tree_root = Node()
+
     def __init__(self, features):
         self.features = features
-        self.tree_root = None
-        self.data_2D = self.construct_2D_array(dataset)
-        self.build_decision_tree(self.data_2D, self.tree_root)
+        self.build_decision_tree(self.construct_2D_array(dataset), self.tree_root)
 
     def construct_2D_array(self, dataset):
         data_2D = []
@@ -69,6 +68,8 @@ class ID3:
 
     def entropy(self, column_index, current_items):
         #  total entropy
+        print(current_items)
+        print(len(current_items))
         total = len(current_items)
         need = 0
         no_need = 0
@@ -76,17 +77,17 @@ class ID3:
         one_need = 0
         zero_no_need = 0
         one_no_need = 0
-        decision_col = len(self.data_2D[0]) - 1
+        decision_col = len(current_items[0]) - 1
         for i in range(0, len(current_items)):
-            if self.data_2D[i][decision_col] == 0:
+            if current_items[i][decision_col] == 0:
                 no_need += 1
-                if self.data_2D[i][column_index]:
+                if current_items[i][column_index] == 1:
                     one_no_need += 1
                 else:
                     zero_no_need += 1
             else:
                 need += 1
-                if self.data_2D[i][column_index]:
+                if current_items[i][column_index] == 1:
                     one_need += 1
                 else:
                     zero_need += 1
@@ -99,7 +100,6 @@ class ID3:
         zero_entropy = 0
         total_zero = zero_need + zero_no_need
         if total_zero > 0:
-            print(zero_need, zero_no_need)
             p_zero_need = zero_need / total_zero
             p_zero_no_need = zero_no_need / total_zero
             if p_zero_need != 1 and p_zero_need != 0:
@@ -110,7 +110,6 @@ class ID3:
         one_entropy = 0
         total_one = one_need + one_no_need
         if total_one > 0:
-            print(one_need, one_no_need)
             p_one_need = one_need / total_one
             p_one_no_need = one_no_need / total_one
             if p_one_need != 1 and p_one_need != 0:
@@ -118,14 +117,14 @@ class ID3:
             if p_one_no_need != 1 and p_one_no_need != 0:
                 one_entropy += -p_one_no_need * math.log(p_one_no_need, 2)
 
+        print(need, no_need)
         return total_entropy, total_zero, zero_entropy, total_one, one_entropy
 
     def info_gain(self, column_index, current_items):
         total_entropy, total_zero, zero_entropy, total_one, one_entropy = self.entropy(column_index, current_items)
-        print('ent:', total_entropy, total_zero, zero_entropy, total_one, one_entropy)
         total = len(current_items)
         gain = total_entropy - (total_zero / total * zero_entropy + total_one / total * one_entropy)
-        return gain, zero_entropy, one_entropy
+        return gain
 
     def split(self, data, column_index):
         data0 = []
@@ -139,36 +138,34 @@ class ID3:
         return data0, data1
 
     def build_decision_tree(self, data, current_node):
+        # checking for purity
+        decision_col = len(data[0]) - 1
+        zeroes = 0
+        for i in range(0, len(data)):
+            if data[i][decision_col] == 0:
+                zeroes += 1
+
+        if zeroes == 0:
+            current_node = Node('', -1, 1, 1)
+            return
+        if zeroes == len(data):
+            current_node = Node('', -1, 1, 0)
+            return
+
         max_gain = -1
         max_feature = -1
-        max_feature_pure = 0
-        max_feature_decision = -1
         for feature_index in range(0, len(self.features)):
             if self.features[feature_index].visited == 1:
                 continue
-            gain, zero_entropy, one_entropy = self.info_gain(feature_index, data)
-
-            print(self.features[feature_index].name)
-            print('g:', gain)
+            gain = self.info_gain(feature_index, data)
+            print(self.features[feature_index].name, gain)
             self.features[feature_index].info_gain = gain
             if gain > max_gain:
                 max_gain = gain
                 max_feature = feature_index
-                if zero_entropy == 0:
-                    max_feature_pure = 1
-                    max_feature_decision = 0
-                if one_entropy == 0:
-                    max_feature_pure = 1
-                    max_feature_decision = 1
-        if max_feature == -1:
-            return
         print('tree: ', self.features[max_feature].name, max_feature)
-        current_node = Node(self.features[max_feature].name, max_feature, max_feature_pure, max_feature_decision)
-        print(current_node.name)
-        print(current_node.decision)
+        current_node = Node(self.features[max_feature].name, max_feature, 0, -1)
         features[max_feature].visited = 1
-        if max_feature_pure:
-            return
         data0, data1 = self.split(data, max_feature)
         self.build_decision_tree(data0, current_node.left)
         self.build_decision_tree(data1, current_node.right)
@@ -179,10 +176,6 @@ class ID3:
         current_node = self.tree_root
         parent_node = current_node
         while current_node is not None:
-            print("hi")
-            print(current_node.name)
-            print(current_node.decision)
-            print(current_node.column_index)
             parent_node = current_node
             if input[current_node.column_index]:
                 current_node = current_node.right
