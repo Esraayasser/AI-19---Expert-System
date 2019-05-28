@@ -273,6 +273,7 @@ class SearchAlgorithms:
                     if newGOfN < child.gOfN:
                         child.gOfN = newGOfN
                         child.previousNode = current
+                        child.heuristicFn = child.hOfN + child.gOfN
                 else:
                     #   if the child node does not exist in the nodes list then we calculate g(n),
                     #   h(n) by using the Euclidean method h(n) = sqrt((a - c)^2 + (b - d)^2)
@@ -334,6 +335,7 @@ class SearchAlgorithms:
                     if newGOfN < child.gOfN:
                         child.gOfN = newGOfN
                         child.previousNode = current
+                        child.heuristicFn = child.hOfN + child.gOfN
                 else:
                     #   if the child node does not exist in the nodes list then we calculate g(n),
                     #   h(n) by using the Manhattan method h(n) = abs(a - c) + abs(b - d),
@@ -349,39 +351,31 @@ class SearchAlgorithms:
 
 
 def main():
-    searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
+    searchAlgo = SearchAlgorithms('.,S,.,.,#,.,.,. .,.,#,.,.,.,#,. .,.,#,.,.,.,.,. .,.,.,#,#,.,.,. .,.,#,#,#,.,.,. .,#,.,#,E,.,#,.')
     path, fullPath = searchAlgo.DFS()
     print('**DFS**\nPath is: ' + str(path) + '\nFull Path is: ' + str(fullPath) + '\n\n')
 
                 #######################################################################################
 
-    searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
+    searchAlgo = SearchAlgorithms('.,S,.,.,#,.,.,. .,.,#,.,.,.,#,. .,.,#,.,.,.,.,. .,.,.,#,#,.,.,. .,.,#,#,#,.,.,. .,#,.,#,E,.,#,.')
     path, fullPath = searchAlgo.BFS()
     print('**BFS**\nPath is: ' + str(path) + '\nFull Path is: ' + str(fullPath) + '\n\n')
                 #######################################################################################
 
-    searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.', [0, 15, 2, 100, 60, 35, 30, 3
-                                                                                                             , 100, 2, 15, 60, 100, 30, 2
-                                                                                                             , 100, 2, 2, 2, 40, 30, 2, 2
-                                                                                                             , 100, 100, 3, 15, 30, 100, 2
-                                                                                                             , 100, 0, 2, 100, 30])
+    """    searchAlgo = SearchAlgorithms('.,S,.,.,#,.,.,. .,.,#,.,.,.,#,. .,.,#,.,.,.,.,. .,.,.,#,#,.,.,. .,.,#,#,#,.,.,. .,#,.,#,E,.,#,.', [4, 0, 25, 2, 100, 60, 35, 30, 3, 2, 100, 2, 15, 60, 100, 30, 4, 4, 100, 2, 2, 2, 40, 30, 5, 5, 8, 100, 100, 3, 15, 30, 6, 6, 100, 100, 100, 2, 15, 30, 7, 100, 2, 100, 0, 2, 100, 30])
     path, fullPath, TotalCost = searchAlgo.UCS()
     print('** UCS **\nPath is: ' + str(path) + '\nFull Path is: ' + str(fullPath) + '\nTotal Cost: ' + str(
         TotalCost) + '\n\n')
                #######################################################################################
-
-    searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.', [0, 15, 2, 100, 60, 35, 30, 3
-                                                                                                             , 100, 2, 15, 60, 100, 30, 2
-                                                                                                             , 100, 2, 2, 2, 40, 30, 2, 2
-                                                                                                             , 100, 100, 3, 15, 30, 100, 2
-                                                                                                             , 100, 0, 2, 100, 30])
+    """
+    searchAlgo = SearchAlgorithms('.,S,.,.,#,.,.,. .,.,#,.,.,.,#,. .,.,#,.,.,.,.,. .,.,.,#,#,.,.,. .,.,#,#,#,.,.,. .,#,.,#,E,.,#,.', [4, 0, 25, 2, 100, 60, 35, 30, 3, 2, 100, 2, 15, 60, 100, 30, 4, 4, 100, 2, 2, 2, 40, 30, 5, 5, 8, 100, 100, 3, 15, 30, 6, 6, 100, 100, 100, 2, 15, 30, 7, 100, 2, 100, 0, 2, 100, 30])
     path, fullPath, TotalCost = searchAlgo.AStarEuclideanHeuristic()
     print('**ASTAR with Euclidean Heuristic **\nPath is: ' + str(path) + '\nFull Path is: ' + str(
         fullPath) + '\nTotal Cost: ' + str(TotalCost) + '\n\n')
 
             #######################################################################################
 
-    searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.')
+    searchAlgo = SearchAlgorithms('.,S,.,.,#,.,.,. .,.,#,.,.,.,#,. .,.,#,.,.,.,.,. .,.,.,#,#,.,.,. .,.,#,#,#,.,.,. .,#,.,#,E,.,#,.')
     path, fullPath, TotalCost = searchAlgo.AStarManhattanHeuristic()
     print('**ASTAR with Manhattan Heuristic **\nPath is: ' + str(path) + '\nFull Path is: ' + str(
         fullPath) + '\nTotal Cost: ' + str(TotalCost) + '\n\n')
